@@ -1,6 +1,5 @@
-import { getClient } from '@apollo/client';
+import { getClient } from '../../../../../apollo-client';
 import fetchWeatherQuery from '../../../../../graphql/queries/fetchWeatherQueries';
-import loadConfig from 'next/dist/server/config';
 
 type Props = {
 	params: {
