@@ -3,6 +3,9 @@ import fetchWeatherQuery from '../../../../../graphql/queries/fetchWeatherQuerie
 import CalloutCard from '../../../../../components/CalloutCard';
 import StatCard from '../../../../../components/StatCard';
 import InformationPanel from '../../../../../components/InformationPanel';
+import TempChart from '../../../../../components/TempChart';
+import cleanData from '../../../../../lib/cleanData';
+import getBasePath from '../../../../../lib/getBasePath';
 
 type Props = {
 	params: {
@@ -27,19 +30,34 @@ async function WeatherPage({params: { city, lat, long }}: Props) {
 
 	const results: Root = data.myQuery;
 
-	console.log('QQQ', results)
+	const dataToSend = cleanData(results, city);
+	console.log('QQQ', dataToSend)
+	
+	const res = await fetch(`${getBasePath()}/api/getWeatherSummary`, {
+		method: 'POST',
+		headers: {
+			"Content-Type": "application/json"
+		},
+		body: JSON.stringify({
+			weatherData: dataToSend
+		})
+	})
+	console.log('XXX', res)
+	const GPTdata = await res.json();
+	const { content } = GPTdata;
+
 	return (
-		<div>
+		<div className='flex flex-col min-h-screen md:flex-row'>
 			<InformationPanel 
 				city={city}
 				lat={lat}
 				long={long}
 				results={results}
 			/>
-			<div>
+			<div className='flex-1 p-5 lg:p-10'>
 				<div className='p-5'>
 					<div className='p-5'>
-						<h2 className='text-xl font-bold'>Todday's Overview</h2>
+						<h2 className='text-xl font-bold'>Today's Overview</h2>
 						<p className='text-sm text-gray-400'>
 							Last updated at:{" "}
 							{new Date(results.current_weather.time).toLocaleString()}
@@ -48,19 +66,19 @@ async function WeatherPage({params: { city, lat, long }}: Props) {
 					</div>
 
 				<div className='m-2 mb-10'>
-					<CalloutCard message='this is where gpt message will go' /></div>
+					<CalloutCard message='this is a message' />
 				</div>
 
 				<div className='grid grid-cols-1 xl:grid-cols-2 gap-5 m-2'>
 					<StatCard 
 						title='Maximum Temperature'
-						metric={`${results.daily.temperature_2m_max[0].toFixed(1)}`}
+						metric={`${results.daily.temperature_2m_max[0].toFixed(1)}°`}
 						color='yellow'
 					/>
 
 					<StatCard 
 						title='Minimum Temperature'
-						metric={`${results.daily.temperature_2m_min[0].toFixed(1)}`}
+						metric={`${results.daily.temperature_2m_min[0].toFixed(1)}°`}
 						color='green'
 					/>
 					
@@ -96,9 +114,10 @@ async function WeatherPage({params: { city, lat, long }}: Props) {
 				<hr className='mb-5' />
 
 				<div className='space-y-3'>
-
+					<TempChart results={results} />
 				</div>
 			</div>
+		</div>
 		</div>
 	)
 }
